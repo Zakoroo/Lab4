@@ -10,11 +10,21 @@ public class MyDate {
 
     /** Skapar ett nytt MyDate objekt för dagen: year, month, day.
         Till exempel: datumet 2029-07-15 skapas med new MyDate(2029,7,15).
-        @throws Kastar ett exception ifall datumet inte är ett giltigt datum (t.ex. 2003-02-29). */
+        @throws Kastar ett exception ifall datumet inte är ett giltigt datum (t.ex. 2003-02-29).*/
     public MyDate(int year, int month, int day) {
-        y = year;
-        m = month;
-        d = day;
+        // Se till att all datum ligger inom rimliga intervall
+        // year must be positive
+        // month must in the intervall [1, 12]
+        // days must check what month it is to check if it falls in the intervall [1, daysInMonth(month, year)]
+        if(year >= 1 && (month >= 1 && month <= 12) && (day >= 1 && day <= daysInMonth(month, year))) {
+            y = year;
+            m = month;
+            d = day;
+        }
+        else {
+            throw new IllegalArgumentException("Invalid date parameters");
+        }
+          
     }
 
     /**
@@ -53,21 +63,41 @@ public class MyDate {
     public boolean equals(Object other) {
         if (other == null) { return false; }
         if (this.getClass() != other.getClass()) { return false; }
+        if(super.equals(other)) { return true; }
+        
         MyDate x = (MyDate)other;
-        return (this == x);
+        return this.compareTo(x) == 0 ? true : false;
     }
 
     /** Jämför två datum.
         @param other datum att jämföra med
         @return -1 ifall this är ett tidigare datum än other, 1 ifall other är ett tidigare datum än this, och 0 ifall this och other representerar samma datum. */
     public int compareTo(MyDate other) {
-        if (this.y < other.y || this.m < other.m || this.d < other.d) {
+        if(this.y < other.y) {
             return -1;
         }
-        if (this.y > other.y || this.m > other.m || this.d > other.d) {
+        else if(this.y == other.y) {
+            if(this.m < other.m) {
+                return -1;
+            }
+            else if(this.m == other.m) {
+                if(this.d < other.d) {
+                    return -1;
+                }
+                else if(this.d == other.d) {
+                    return 0;
+                }
+                else {
+                    return 1;
+                }
+            }
+            else {
+                return 1;
+            }
+        }
+        else {
             return 1;
         }
-        return 0;
     }
 
     /**
@@ -127,4 +157,27 @@ public class MyDate {
         return new MyDate(y,m,d+1);
     }
 
+    /** Skapar en iterator som innehåller upprepningarna av detta datum med
+        en veckas mellanrum. Det första datumet är samma som this; följande är
+        7 dagar senare; och därefter 14 dagar senare, osv. Antalet datum i
+        iterator bör vara samma som det givna repetitionCount.
+        @param repetitionCount antal datum
+        @return en iterator som beter sig som ovan
+        @throws IllegalArgumentException om repetitionCount < 0
+     */
+    public Iterator<MyDate> repeatWeekly(int repetitionCount) {
+        if(repetitionCount < 0)
+            throw new IllegalArgumentException("repetitionCount must be positive value!");
+        
+        LinkedList<MyDate> reps = new LinkedList<>();
+        MyDate date = new MyDate(this.y, this.m, this.d);
+        for(int i = 1; i <= repetitionCount; ++i) {
+            reps.add(date);
+            for(int j = 1; j <= 7; ++j) {
+                date = date.next();
+            }
+        }
+
+        return reps.iterator();
+    }
 }
